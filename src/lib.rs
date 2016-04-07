@@ -2,7 +2,7 @@
 //!
 //! #Description
 //! This crates provides a single struct: `LexBuf` and its associated methods.
-//! 
+//!
 //! This struct intends to ease the hand-writting of lexers as it carries a notion
 //! of "current token".
 //!
@@ -10,20 +10,19 @@
 //!
 //! The "current token" may not be larger than 4096 `u8`. If it is, internal functions may panic.
 //!
-//! 
+//!
 
 
-use std::fs::File;
 use std::io::Read;
 
-const BUFSIZE : usize = 4096;
+const BUFSIZE: usize = 4096;
 
 /// A `LexBuf` is built upon a type with trait `Read`.
-/// 
+///
 /// #Abstract view
 /// The user may see a LexBuf as an infinite read-only tape with two pointer on its, *head* and
 /// *tail*, delimiting a (current) token [tail,head[.
-/// 
+///
 /// The content of the tape is the content of the T : Read it's built upon, with infinite zeroes on
 /// the right.
 ///
@@ -39,44 +38,43 @@ const BUFSIZE : usize = 4096;
 ///     likely to panic.
 
 pub struct LexBuf<T: Read> {
-    //iner reader upon wich the LexBuf is built
+    // iner reader upon wich the LexBuf is built
     r: T,
-    //internal buffer
+    // internal buffer
     buf: [u8; BUFSIZE],
-    //begining of the current token
+    // begining of the current token
     tail: usize,
-    //next character to be read
-    head: usize
+    // next character to be read
+    head: usize,
 }
 
-impl <T : Read> LexBuf<T> {
-    
+impl<T: Read> LexBuf<T> {
     /// `new` takes a reader and consumes it to
     /// build a lexing buffer with an empty *token*.
-    pub fn new(r : T) -> LexBuf<T> {
+    pub fn new(r: T) -> LexBuf<T> {
         let mut new_buf = LexBuf {
             r: r,
-            tail:0,
+            tail: 0,
             head: 0,
-            buf: [0;BUFSIZE]
+            buf: [0; BUFSIZE],
         };
         new_buf.fetch();
         new_buf
     }
-    
-    //internal function used to bufferize new data
+
+    // internal function used to bufferize new data
     fn fetch(&mut self) {
         let keep_size = self.head - self.tail;
         if keep_size == BUFSIZE {
             panic!("Current token is longer than buffer");
         }
         let tmp_buf = &self.buf[self.tail..self.head].to_vec();
-        &mut self.buf[0..keep_size]
-            .clone_from_slice(tmp_buf);
+        &mut self.buf[0..keep_size].clone_from_slice(tmp_buf);
         let n = self.r
-            .read(&mut self.buf[keep_size..]).unwrap();
+                    .read(&mut self.buf[keep_size..])
+                    .unwrap();
         if n < BUFSIZE - keep_size {
-            for i in &mut self.buf[keep_size+n..] {
+            for i in &mut self.buf[keep_size + n..] {
                 *i = 0;
             }
         }
@@ -89,13 +87,13 @@ impl <T : Read> LexBuf<T> {
     pub fn get(&mut self) -> u8 {
         match self.buf.get(self.head) {
             Some(&c) => {
-                self.head +=1; 
+                self.head += 1;
                 c
-            },
+            }
             None => {
                 self.fetch();
                 self.get()
-            },
+            }
         }
     }
 
@@ -114,7 +112,7 @@ impl <T : Read> LexBuf<T> {
         self.head -= 1;
     }
 
-    /// `move_on` move tail to head, effectively resetting the current token to the empty one. 
+    /// `move_on` move tail to head, effectively resetting the current token to the empty one.
     pub fn move_on(&mut self) {
         self.tail = self.head;
     }
@@ -127,7 +125,7 @@ impl <T : Read> LexBuf<T> {
 
     /// Get the current token.
     pub fn get_token(&self) -> Vec<u8> {
-       self.buf[self.tail..self.head].to_vec()
+        self.buf[self.tail..self.head].to_vec()
     }
 
     /// Get the current token and moves on.
