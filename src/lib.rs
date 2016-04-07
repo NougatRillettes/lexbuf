@@ -24,6 +24,9 @@ const BUFSIZE : usize = 4096;
 /// The user may see a LexBuf as an infinite read-only tape with two pointer on its, *head* and
 /// *tail*, delimiting a (current) token [tail,head[.
 /// 
+/// The content of the tape is the content of the T : Read it's built upon, with infinite zeroes on
+/// the right.
+///
 /// #Caveats
 ///
 /// As no computer has yet achieved infinite memory, the following limits have to be taken into
@@ -73,7 +76,9 @@ impl <T : Read> LexBuf<T> {
         let n = self.r
             .read(&mut self.buf[keep_size..]).unwrap();
         if n < BUFSIZE - keep_size {
-            self.buf[keep_size+n] = 0;
+            for i in &mut self.buf[keep_size+n..] {
+                *i = 0;
+            }
         }
         self.head -= self.tail;
         self.tail = 0;
@@ -83,7 +88,6 @@ impl <T : Read> LexBuf<T> {
     /// read character to the current token.
     pub fn get(&mut self) -> u8 {
         match self.buf.get(self.head) {
-            Some(&0) => 0,
             Some(&c) => {
                 self.head +=1; 
                 c
