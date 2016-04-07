@@ -99,6 +99,21 @@ impl <T : Read> LexBuf<T> {
         }
     }
 
+    /// `get_char` behaves like `get`, except that it returns a `char` instead of an `u8` to ease
+    /// later matching.
+    pub fn get_char(&mut self) -> char {
+        self.get() as char
+    }
+
+    /// `unget()` moves head backward of 1 cell. Panics if this would bring head behind tail (ie.
+    /// if you have made more unget than get since the last time you moved on).
+    pub fn unget(&mut self) {
+        if self.head <= self.tail {
+            panic!("Cannot unget, you ave moved on !")
+        }
+        self.head -= 1;
+    }
+
     /// `move_on` move tail to head, effectively resetting the current token to the empty one. 
     pub fn move_on(&mut self) {
         self.tail = self.head;
