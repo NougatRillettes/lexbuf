@@ -145,3 +145,18 @@ impl<T: Read> LexBuf<T> {
         self.tail += 1;
     }
 }
+
+/// This implementation is mainly useful to use std functions on iterators.
+///
+/// Be aware that it only moves head forward and so, user must take care of calling move_on() when
+/// appropriate.
+impl<T: Read> Iterator for LexBuf<T> {
+    type Item = u8;
+
+    fn next(&mut self) -> Option<u8> {
+        match self.get() {
+            0 => None,
+            c => Some(c),
+        }
+    }
+}
