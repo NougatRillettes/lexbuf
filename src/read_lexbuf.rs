@@ -1,44 +1,19 @@
-//! Lexing buffers are buffers with a notion of *token*.
-//!
-//! #Description
-//! This crates provides a single struct: `LexBuf` and its associated methods.
-//!
-//! This struct intends to ease the hand-writting of lexers as it carries a notion
-//! of "current token".
-//!
-//! #Caveat
-//!
-//! The "current token" may not be larger than 4096 `u8`. If it is, internal functions may panic.
-//!
-//!
-
-
+use lexbuf::LexBuf;
 use std::io::Read;
 
 const BUFSIZE: usize = 4096;
 
-/// A `LexBuf` is built upon a type with trait `Read`.
+/// A `ReadLexBuf` is a `LexBuf` built upon a type with trait `Read`.
 ///
-/// #Abstract view
-/// The user may see a LexBuf as an infinite read-only tape with two pointer on its, *head* and
-/// *tail*, delimiting a (current) token [tail,head[.
-///
-/// The content of the tape is the content of the T : Read it's built upon, with infinite zeroes on
-/// the right.
+/// It buffers the read and provides the highlighting functionalities.
 ///
 /// #Caveats
 ///
-/// As no computer has yet achieved infinite memory, the following limits have to be taken into
-/// account:
-///
-///  1. One can never go back beyond tail : once we have recognized the the current token and
-///     **moved on**, it is definitely lost.
-///
-///  2. Head and tail shall not be distant of more than 4096 cells. If they are, methods calls are
-///     likely to panic.
+///  Head and tail shall not be distant of more than 4096 cells. If they are, methods calls are
+///  likely to panic.
 
-pub struct LexBuf<T: Read> {
-    // iner reader upon wich the LexBuf is built
+pub struct ReadLexBuf<T: Read> {
+    // iner reader upon wich the ReadLexBuf is built
     r: T,
     // internal buffer
     buf: [u8; BUFSIZE],
@@ -48,11 +23,11 @@ pub struct LexBuf<T: Read> {
     head: usize,
 }
 
-impl<T: Read> LexBuf<T> {
+impl<T: Read> ReadLexBuf<T> {
     /// `new` takes a reader and consumes it to
     /// build a lexing buffer with an empty *token*.
-    pub fn new(r: T) -> LexBuf<T> {
-        let mut new_buf = LexBuf {
+    pub fn new(r: T) -> ReadLexBuf<T> {
+        let mut new_buf = ReadLexBuf {
             r: r,
             tail: 0,
             head: 0,
@@ -82,9 +57,15 @@ impl<T: Read> LexBuf<T> {
         self.tail = 0;
     }
 
-    /// `get` returns the next unread character and moves the head forward, effectively adding the
-    /// read character to the current token.
-    pub fn get(&mut self) -> u8 {
+    /// `get_char` behaves like `get`, except that it returns a `char` instead of an `u8` to ease
+    /// later matching.
+    pub fn get_char(&mut self) -> char {
+        self.get() as char
+    }
+}
+
+impl<T: Read> LexBuf for ReadLexBuf<T> {
+    fn get(&mut self) -> u8 {
         match self.buf.get(self.head) {
             Some(&c) => {
                 self.head += 1;
@@ -97,66 +78,37 @@ impl<T: Read> LexBuf<T> {
         }
     }
 
-    /// `get_char` behaves like `get`, except that it returns a `char` instead of an `u8` to ease
-    /// later matching.
-    pub fn get_char(&mut self) -> char {
-        self.get() as char
-    }
+    type Content = u8;
 
-    /// `unget()` moves head backward of 1 cell. Panics if this would bring head behind tail (ie.
-    /// if you have made more unget than get since the last time you moved on).
-    pub fn unget(&mut self) {
+    fn unget(&mut self) {
         if self.head <= self.tail {
             panic!("Cannot unget, you ave moved on !")
         }
         self.head -= 1;
     }
 
-    /// `move_on` move tail to head, effectively resetting the current token to the empty one.
-    pub fn move_on(&mut self) {
+    fn move_on(&mut self) {
         self.tail = self.head;
     }
 
-    /// `give_up` gives up on the current token and move head back to tail, ie. the `LexBuf`  goes back to the
-    /// state it was in after the last `move-on()` (or `new()`).
-    pub fn give_up(&mut self) {
+    fn give_up(&mut self) {
         self.head = self.tail;
     }
 
-    /// Get the current token.
-    pub fn get_token(&self) -> Vec<u8> {
+    fn get_highlight(&self) -> Vec<u8> {
         self.buf[self.tail..self.head].to_vec()
     }
 
-    /// Get the current token and moves on.
-    pub fn validate(&mut self) -> Vec<u8> {
-        let res = self.get_token();
+    fn validate(&mut self) -> Vec<u8> {
+        let res = self.get_highlight();
         self.move_on();
         res
     }
 
-    /// Shrinks the current token on the left (that is moves tail forward)
-    ///
-    /// This function panics if the current token size is 0.
-    pub fn shrink(&mut self) {
+    fn shrink(&mut self) {
         if self.tail >= self.head {
             panic!("Current token is empty !")
         }
         self.tail += 1;
-    }
-}
-
-/// This implementation is mainly useful to use std functions on iterators.
-///
-/// Be aware that it only moves head forward and so, user must take care of calling move_on() when
-/// appropriate.
-impl<T: Read> Iterator for LexBuf<T> {
-    type Item = u8;
-
-    fn next(&mut self) -> Option<u8> {
-        match self.get() {
-            0 => None,
-            c => Some(c),
-        }
     }
 }
