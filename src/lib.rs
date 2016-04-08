@@ -134,4 +134,14 @@ impl<T: Read> LexBuf<T> {
         self.move_on();
         res
     }
+
+    /// Shrinks the current token on the left (that is moves tail forward)
+    ///
+    /// This function panics if the current token size is 0.
+    pub fn shrink(&mut self) {
+        if self.tail >= self.head {
+            panic!("Current token is empty !")
+        }
+        self.tail += 1;
+    }
 }
