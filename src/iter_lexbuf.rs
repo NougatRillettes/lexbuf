@@ -1,27 +1,39 @@
 use lexbuf::LexBuf;
 
-pub struct IterLexBuf<I> where I: Iterator, I::Item : Copy {
-    //highlight length
+/// An `IterLexBuf` is a `LexBuf` built upon a type with the Iterator trait.
+///
+/// Its internal buffer is not of a limited size.
+pub struct IterLexBuf<I>
+    where I: Iterator,
+          I::Item: Copy
+{
+    // highlight length
     hlen: usize,
     // highlight offset
     hoffset: usize,
-    //buffer
+    // buffer
     buf: Vec<I::Item>,
-    //end indicator
+    // end indicator
     end_ind: I::Item,
-    //inner iterator
-    iter: I
+    // inner iterator
+    iter: I,
 }
 
-impl<I> IterLexBuf<I> where I: Iterator, I::Item : Copy {
-    /// Builds a new `IterLexBuf` upon `iter` with end indicator `ind`
-    pub fn new(iter : I,ind : I::Item) -> IterLexBuf<I> {
-        IterLexBuf{
+impl<I> IterLexBuf<I>
+    where I: Iterator,
+          I::Item: Copy
+{
+    /// Builds a new `IterLexBuf` upon `iter` with end indicator `ind`.
+    ///
+    /// The end indicator is written on the tape when the underlying interator `next()` method
+    /// returns `None`.
+    pub fn new(iter: I, ind: I::Item) -> IterLexBuf<I> {
+        IterLexBuf {
             hlen: 0,
             hoffset: 0,
             buf: vec![],
-            end_ind : ind,
-            iter: iter
+            end_ind: ind,
+            iter: iter,
         }
     }
 
@@ -30,14 +42,15 @@ impl<I> IterLexBuf<I> where I: Iterator, I::Item : Copy {
     }
 }
 
-impl<I> LexBuf for IterLexBuf<I> where I : Iterator, I::Item : Copy {
-
+impl<I> LexBuf for IterLexBuf<I>
+    where I: Iterator,
+          I::Item: Copy
+{
     type Content = I::Item;
 
     fn get(&mut self) -> I::Item {
         if self.hoffset + self.hlen == self.buf.len() {
-            let x =
-            {
+            let x = {
                 let n = self.iter.next();
                 match n {
                     None => self.end_ind,
@@ -71,7 +84,7 @@ impl<I> LexBuf for IterLexBuf<I> where I : Iterator, I::Item : Copy {
     }
 
     fn get_highlight(&self) -> Vec<I::Item> {
-        self.buf[self.hoffset .. self.hlen + self.hoffset].to_vec()
+        self.buf[self.hoffset..self.hlen + self.hoffset].to_vec()
     }
 
     fn validate(&mut self) -> Vec<I::Item> {
@@ -87,6 +100,4 @@ impl<I> LexBuf for IterLexBuf<I> where I : Iterator, I::Item : Copy {
         self.hlen -= 1;
         self.hoffset += 1;
     }
-
-
 }

@@ -5,6 +5,9 @@ use std::io::Read;
 
 
 /// This struct is used as an iterator on a LexBuf.
+///
+/// The main use case is to resort to std's functions on iterators
+/// to recognize tokens.
 pub struct LexIter<'a, T: 'a + LexBuf> {
     lb: &'a mut T,
 }
@@ -68,7 +71,9 @@ pub trait LexBuf {
     }
 }
 
-impl<'a,T> Iterator for LexIter<'a, ReadLexBuf<T>> where ReadLexBuf<T> : 'a, T : Read 
+impl<'a, T> Iterator for LexIter<'a, ReadLexBuf<T>>
+    where ReadLexBuf<T>: 'a,
+          T: Read
 {
     type Item = u8;
     fn next(&mut self) -> Option<u8> {
@@ -80,7 +85,12 @@ impl<'a,T> Iterator for LexIter<'a, ReadLexBuf<T>> where ReadLexBuf<T> : 'a, T :
     }
 }
 
-impl<'a,I> Iterator for LexIter<'a, IterLexBuf<I>> where IterLexBuf<I> : 'a, I : Iterator, I::Item : Copy, I::Item : PartialEq {
+impl<'a, I> Iterator for LexIter<'a, IterLexBuf<I>>
+    where IterLexBuf<I>: 'a,
+          I: Iterator,
+          I::Item: Copy,
+          I::Item: PartialEq
+{
     type Item = I::Item;
     fn next(&mut self) -> Option<I::Item> {
         let c = self.lb.get();
@@ -90,4 +100,3 @@ impl<'a,I> Iterator for LexIter<'a, IterLexBuf<I>> where IterLexBuf<I> : 'a, I :
         Some(c)
     }
 }
-

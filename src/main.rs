@@ -11,7 +11,7 @@ fn main() {
     let mut c = buf.get();
     let mut i = 0;
     while c != 0 {
-        print!("{}",c as char);
+        print!("{}", c as char);
         if i % 3 == 0 {
             println!("\nValidated: {}", str::from_utf8(&buf.validate()).unwrap());
         } else if i % 4 == 0 {
