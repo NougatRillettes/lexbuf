@@ -1,14 +1,14 @@
-pub use read_lexbuf::ReadLexBuf;
-pub use iter_lexbuf::IterLexBuf;
+pub use read_hlbuf::ReadHlBuf;
+pub use iter_hlbuf::IterHlBuf;
 
 use std::io::Read;
 
 
-/// This struct is used as an iterator on a LexBuf.
+/// This struct is used as an iterator on a HlBuf.
 ///
 /// The main use case is to resort to std's functions on iterators
 /// to recognize tokens.
-pub struct LexIter<'a, T: 'a + LexBuf> {
+pub struct HlIter<'a, T: 'a + HlBuf> {
     lb: &'a mut T,
 }
 
@@ -16,7 +16,7 @@ pub struct LexIter<'a, T: 'a + LexBuf> {
 /// This trait provides most of the functionalities.
 ///
 /// #Abstract view
-/// The user may see a LexBuf as an infinite read-only tape with two pointer on its, *head* and
+/// The user may see a HlBuf as an infinite read-only tape with two pointer on it, *head* and
 /// *tail*, delimiting a (current) highlight [tail,head[.
 ///
 ///
@@ -27,8 +27,8 @@ pub struct LexIter<'a, T: 'a + LexBuf> {
 ///
 ///  1. One can never go back beyond tail : once we have finished working the the current highlight and
 ///     **moved on**, it is definitely lost.
-pub trait LexBuf {
-    /// The content of the LexBuf.
+pub trait HlBuf {
+    /// The content of the HlBuf.
     type Content;
 
     /// Returns the next unread item and moves the head forward, effectively adding the
@@ -44,7 +44,7 @@ pub trait LexBuf {
     /// Moves tail to head, effectively resetting the current highlight to the empty one.
     fn move_on(&mut self);
 
-    /// Gives up on the current highlight and move head back to tail, ie. the `LexBuf`
+    /// Gives up on the current highlight and move head back to tail, ie. the `HlBuf`
     /// goes back to the state it was in after the last `move-on()` (or `new()`).
     fn give_up(&mut self);
 
@@ -63,16 +63,16 @@ pub trait LexBuf {
         res
     }
 
-    /// Returns an iterator on the LexBuf, so that the std methods on Iterator may be used.
-    fn iter(&mut self) -> LexIter<Self>
+    /// Returns an iterator on the HlBuf, so that the std methods on Iterator may be used.
+    fn iter(&mut self) -> HlIter<Self>
         where Self: Sized
     {
-        LexIter { lb: self }
+        HlIter { lb: self }
     }
 }
 
-impl<'a, T> Iterator for LexIter<'a, ReadLexBuf<T>>
-    where ReadLexBuf<T>: 'a,
+impl<'a, T> Iterator for HlIter<'a, ReadHlBuf<T>>
+    where ReadHlBuf<T>: 'a,
           T: Read
 {
     type Item = u8;
@@ -85,8 +85,8 @@ impl<'a, T> Iterator for LexIter<'a, ReadLexBuf<T>>
     }
 }
 
-impl<'a, I> Iterator for LexIter<'a, IterLexBuf<I>>
-    where IterLexBuf<I>: 'a,
+impl<'a, I> Iterator for HlIter<'a, IterHlBuf<I>>
+    where IterHlBuf<I>: 'a,
           I: Iterator,
           I::Item: Copy,
           I::Item: PartialEq

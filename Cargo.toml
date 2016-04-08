@@ -1,16 +1,16 @@
 [package]
-name = "lexbuf"
+name = "hlbuf"
 version = "0.1.0"
 authors = ["Arthur Carcano <arthur.carcano@ens.fr>"]
 
 [lib]
-name = "lexbuf"
+name = "hlbuf"
 doc = true
 
 [dependencies]
 
 
 [[bin]]
-name = "lextest"
+name = "test"
 doc = false
 

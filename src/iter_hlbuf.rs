@@ -1,9 +1,9 @@
-use lexbuf::LexBuf;
+use hlbuf::HlBuf;
 
-/// An `IterLexBuf` is a `LexBuf` built upon a type with the Iterator trait.
+/// An `IterHlBuf` is a `HlBuf` built upon a type with the Iterator trait.
 ///
 /// Its internal buffer is not of a limited size.
-pub struct IterLexBuf<I>
+pub struct IterHlBuf<I>
     where I: Iterator,
           I::Item: Copy
 {
@@ -19,16 +19,16 @@ pub struct IterLexBuf<I>
     iter: I,
 }
 
-impl<I> IterLexBuf<I>
+impl<I> IterHlBuf<I>
     where I: Iterator,
           I::Item: Copy
 {
-    /// Builds a new `IterLexBuf` upon `iter` with end indicator `ind`.
+    /// Builds a new `IterHlBuf` upon `iter` with end indicator `ind`.
     ///
     /// The end indicator is written on the tape when the underlying interator `next()` method
     /// returns `None`.
-    pub fn new(iter: I, ind: I::Item) -> IterLexBuf<I> {
-        IterLexBuf {
+    pub fn new(iter: I, ind: I::Item) -> IterHlBuf<I> {
+        IterHlBuf {
             hlen: 0,
             hoffset: 0,
             buf: vec![],
@@ -42,7 +42,7 @@ impl<I> IterLexBuf<I>
     }
 }
 
-impl<I> LexBuf for IterLexBuf<I>
+impl<I> HlBuf for IterHlBuf<I>
     where I: Iterator,
           I::Item: Copy
 {

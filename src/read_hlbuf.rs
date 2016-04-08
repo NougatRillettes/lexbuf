@@ -1,9 +1,9 @@
-use lexbuf::LexBuf;
+use hlbuf::HlBuf;
 use std::io::Read;
 
 const BUFSIZE: usize = 4096;
 
-/// A `ReadLexBuf` is a `LexBuf` built upon a type with trait `Read`.
+/// A `ReadHlBuf` is a `HlBuf` built upon a type with trait `Read`.
 ///
 /// It buffers the read and provides the highlighting functionalities.
 ///
@@ -12,8 +12,8 @@ const BUFSIZE: usize = 4096;
 ///  Head and tail shall not be distant of more than 4096 cells. If they are, methods calls are
 ///  likely to panic.
 
-pub struct ReadLexBuf<T: Read> {
-    // iner reader upon wich the ReadLexBuf is built
+pub struct ReadHlBuf<T: Read> {
+    // iner reader upon wich the ReadHlBuf is built
     r: T,
     // internal buffer
     buf: [u8; BUFSIZE],
@@ -23,11 +23,11 @@ pub struct ReadLexBuf<T: Read> {
     head: usize,
 }
 
-impl<T: Read> ReadLexBuf<T> {
+impl<T: Read> ReadHlBuf<T> {
     /// `new` takes a reader and consumes it to
-    /// build a lexing buffer with an empty *token*.
-    pub fn new(r: T) -> ReadLexBuf<T> {
-        let mut new_buf = ReadLexBuf {
+    /// build a hling buffer with an empty *token*.
+    pub fn new(r: T) -> ReadHlBuf<T> {
+        let mut new_buf = ReadHlBuf {
             r: r,
             tail: 0,
             head: 0,
@@ -64,7 +64,7 @@ impl<T: Read> ReadLexBuf<T> {
     }
 }
 
-impl<T: Read> LexBuf for ReadLexBuf<T> {
+impl<T: Read> HlBuf for ReadHlBuf<T> {
     fn get(&mut self) -> u8 {
         match self.buf.get(self.head) {
             Some(&c) => {

@@ -1,13 +1,13 @@
 use std::env;
 use std::str;
 
-extern crate lexbuf;
+extern crate hlbuf;
 
-use lexbuf::*;
+use hlbuf::*;
 
 fn main() {
     let r = env::args().nth(1).unwrap();
-    let mut buf = ReadLexBuf::new(r.as_bytes());
+    let mut buf = ReadHlBuf::new(r.as_bytes());
     let mut c = buf.get();
     let mut i = 0;
     while c != 0 {
